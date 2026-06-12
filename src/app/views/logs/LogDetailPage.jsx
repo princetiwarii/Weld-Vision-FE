@@ -4,11 +4,14 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { styled } from "@mui/material/styles";
 import {
-  Alert, Box, Card, Chip, CircularProgress,
-  Grid, IconButton, Tooltip, Typography
+  Alert, Box, Card, Chip, CircularProgress, Divider,
+  IconButton, LinearProgress, Table, TableBody,
+  TableCell, TableContainer, TableHead, TableRow,
+  Tooltip, Typography
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import ImageSearchIcon from "@mui/icons-material/ImageSearch";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import BuildOutlinedIcon from "@mui/icons-material/BuildOutlined";
 import { BASE_URL } from "app/config";
 
 // ─── Styled ────────────────────────────────────────────────
@@ -38,32 +41,65 @@ const MetaChip = styled(Box)(({ theme }) => ({
   marginRight: "0.75rem", marginBottom: "0.75rem"
 }));
 
-const ImageCard = styled(Card)(({ theme }) => ({
-  overflow: "hidden",
-  cursor: "pointer",
-  transition: "transform 0.18s ease, box-shadow 0.18s ease",
-  "&:hover": {
-    transform: "translateY(-4px)",
-    boxShadow: theme.shadows[8]
+const FullImg = styled("img")(() => ({
+  width: "100%",
+  borderRadius: 8,
+  display: "block",
+  objectFit: "cover",
+  cursor: "zoom-in",
+  transition: "opacity 0.15s ease",
+  "&:hover": { opacity: 0.88 }
+}));
+
+const ImgLabel = styled(Typography)(({ theme }) => ({
+  fontSize: "0.72rem",
+  fontWeight: 700,
+  textTransform: "uppercase",
+  letterSpacing: "0.08em",
+  color: theme.palette.text.disabled,
+  marginBottom: "0.5rem"
+}));
+
+const PairDivider = styled(Divider)(() => ({
+  marginBottom: "1.5rem",
+  marginTop: "0.5rem"
+}));
+
+const StyledDefectTable = styled(Table)(() => ({
+  "& .MuiTableCell-root": {
+    paddingLeft: "14px",
+    paddingRight: "14px",
+    paddingTop: "10px",
+    paddingBottom: "10px",
+    fontSize: "0.82rem"
+  },
+  "& .MuiTableCell-head": {
+    paddingTop: "10px",
+    paddingBottom: "10px",
+    fontSize: "0.75rem",
+    fontWeight: 700
   }
 }));
 
-const StitchedImg = styled("img")(() => ({
-  width: "100%",
-  height: 160,
-  objectFit: "cover",
-  display: "block"
+const StyledTableHead = styled(TableHead)(({ theme }) => ({
+  backgroundColor: theme.palette.action.hover
 }));
 
-const ImgPlaceholder = styled(Box)(({ theme }) => ({
-  width: "100%",
-  height: 160,
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
+const RecommendationBox = styled(Box)(({ theme }) => ({
+  padding: "0.75rem 1rem",
+  borderRadius: 8,
   backgroundColor: theme.palette.action.hover,
-  color: theme.palette.text.disabled
+  borderLeft: "3px solid",
+  borderColor: theme.palette.primary.main,
+  marginBottom: "0.5rem"
 }));
+
+const SeverityColors = {
+  low: "#4caf50",
+  medium: "#ff9800",
+  high: "#f44336",
+  critical: "#b71c1c"
+};
 
 // ─── Helpers ───────────────────────────────────────────────
 function resultColor(r) {
@@ -95,7 +131,307 @@ function ComplianceBadge({ label, pass }) {
   );
 }
 
-// ─── Component ─────────────────────────────────────────────
+// ─── Lightbox ──────────────────────────────────────────────
+function Lightbox({ src, onClose }) {
+  if (!src) return null;
+  return (
+    <Box
+      onClick={onClose}
+      sx={{
+        position: "fixed",
+        top: 0, left: 0, right: 0, bottom: 0,
+        backgroundColor: "rgba(0,0,0,0.92)",
+        zIndex: 9999,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        cursor: "zoom-out",
+        p: 2
+      }}
+    >
+      <Box
+        onClick={(e) => e.stopPropagation()}
+        sx={{ position: "relative", maxWidth: "95vw", maxHeight: "95vh" }}
+      >
+        <img
+          src={src}
+          alt="Full view"
+          style={{
+            maxWidth: "95vw",
+            maxHeight: "90vh",
+            borderRadius: 8,
+            objectFit: "contain",
+            display: "block"
+          }}
+        />
+        <Box
+          onClick={onClose}
+          sx={{
+            position: "absolute",
+            top: -16, right: -16,
+            width: 32, height: 32,
+            borderRadius: "50%",
+            backgroundColor: "rgba(255,255,255,0.15)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", color: "#fff", fontWeight: 700, fontSize: "1rem",
+            "&:hover": { backgroundColor: "rgba(255,255,255,0.3)" }
+          }}
+        >
+          ✕
+        </Box>
+      </Box>
+    </Box>
+  );
+}
+
+// ─── Single pair section ────────────────────────────────────
+function PairSection({ pair, index, onImageClick }) {
+  const isPending = pair.weld_quality_score === 0 && pair.overall_result === "review";
+
+  return (
+    <Box mb={4}>
+
+      {/* ── Pair header ── */}
+      <Box display="flex" alignItems="center" gap={1.5} mb={2}>
+        <Box sx={{
+          width: 28, height: 28, borderRadius: "50%",
+          backgroundColor: "action.hover",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontWeight: 700, fontSize: "0.8rem", flexShrink: 0
+        }}>
+          {index + 1}
+        </Box>
+        <Typography variant="subtitle1" fontWeight={700}>
+          {pair.source_frame_a_label}
+          {pair.source_frame_b_label ? ` + ${pair.source_frame_b_label}` : ""}
+        </Typography>
+        <Chip
+          label={isPending ? "AI Pending" : pair.overall_result.toUpperCase()}
+          color={resultColor(pair.overall_result)}
+          size="small" sx={{ fontWeight: 600 }}
+        />
+        {!isPending && pair.weld_quality_score > 0 && (
+          <Typography variant="caption" color="textSecondary">
+            Score: <strong>{pair.weld_quality_score}/100</strong>
+          </Typography>
+        )}
+      </Box>
+
+      {/* ── Score bar ── */}
+      {!isPending && pair.weld_quality_score > 0 && (
+        <Box mb={2}>
+          <LinearProgress
+            variant="determinate"
+            value={pair.weld_quality_score}
+            sx={{
+              height: 7, borderRadius: 4,
+              backgroundColor: "action.hover",
+              "& .MuiLinearProgress-bar": {
+                backgroundColor: scoreBarColor(pair.weld_quality_score),
+                borderRadius: 4
+              }
+            }}
+          />
+        </Box>
+      )}
+
+      {/* ── Original image ── */}
+      <ImgLabel>Original Image</ImgLabel>
+      <FullImg
+        src={pair.stitched_image_url}
+        alt={`${pair.source_frame_a_label} original`}
+        sx={{ mb: 2.5 }}
+        onClick={() => onImageClick(pair.stitched_image_url)}
+      />
+
+      {/* ── AI Labeled image ── */}
+      <ImgLabel>AI Labeled Image</ImgLabel>
+      <FullImg
+        src={pair.annotated_image_url}
+        alt={`${pair.source_frame_a_label} labeled`}
+        sx={{ mb: 2.5 }}
+        onClick={() => onImageClick(pair.annotated_image_url)}
+      />
+
+      {/* ── Defects table ── */}
+      <ImgLabel sx={{ mb: 1 }}>Defect Analysis</ImgLabel>
+      {isPending ? (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          AI analysis pending — defect data will appear once Gemini is enabled.
+        </Alert>
+      ) : pair.defects?.length === 0 ? (
+        <Box display="flex" alignItems="center" gap={1}
+          color="success.main" mb={2}>
+          <CheckCircleOutlineIcon fontSize="small" />
+          <Typography variant="body2">No defects detected in this pair.</Typography>
+        </Box>
+      ) : (
+        <Card elevation={0} variant="outlined"
+          sx={{ mb: 2.5, borderRadius: 2, overflow: "hidden" }}>
+          <TableContainer sx={{ overflowX: "auto" }}>
+            <StyledDefectTable sx={{ minWidth: 700 }}>
+              <StyledTableHead>
+                <TableRow>
+                  <TableCell>#</TableCell>
+                  <TableCell>Type</TableCell>
+                  <TableCell>Severity</TableCell>
+                  <TableCell>Position</TableCell>
+                  <TableCell>Dimensions</TableCell>
+                  <TableCell align="center">Confidence</TableCell>
+                  <TableCell>Standard Ref</TableCell>
+                  <TableCell>Recommendation</TableCell>
+                </TableRow>
+              </StyledTableHead>
+              <TableBody>
+                {pair.defects.map((d, i) => (
+                  <TableRow key={d.defect_id || i}
+                    sx={{ "&:hover": { backgroundColor: "action.hover" } }}>
+
+                    <TableCell>
+                      <Typography variant="body2" color="textSecondary">
+                        {i + 1}
+                      </Typography>
+                    </TableCell>
+
+                    <TableCell>
+                      <Typography variant="body2" fontWeight={600}>
+                        {d.type}
+                      </Typography>
+                      {d.description && (
+                        <Tooltip title={d.description} arrow>
+                          <Typography variant="caption" color="textSecondary"
+                            sx={{
+                              display: "block", maxWidth: 160,
+                              overflow: "hidden", textOverflow: "ellipsis",
+                              whiteSpace: "nowrap", cursor: "help"
+                            }}>
+                            {d.description}
+                          </Typography>
+                        </Tooltip>
+                      )}
+                    </TableCell>
+
+                    <TableCell>
+                      <Chip
+                        label={d.severity}
+                        size="small"
+                        sx={{
+                          backgroundColor: SeverityColors[d.severity] || "#999",
+                          color: "#fff",
+                          fontWeight: 600,
+                          fontSize: "0.72rem"
+                        }}
+                      />
+                    </TableCell>
+
+                    <TableCell>
+                      <Typography variant="body2">{d.position || "—"}</Typography>
+                    </TableCell>
+
+                    <TableCell>
+                      <Box display="flex" flexDirection="column" gap={0.25}>
+                        {d.length_mm != null && (
+                          <Typography variant="caption">L: {d.length_mm}mm</Typography>
+                        )}
+                        {d.width_mm != null && (
+                          <Typography variant="caption">W: {d.width_mm}mm</Typography>
+                        )}
+                        {d.depth_mm != null && (
+                          <Typography variant="caption">D: {d.depth_mm}mm</Typography>
+                        )}
+                        {d.count != null && (
+                          <Typography variant="caption">Count: {d.count}</Typography>
+                        )}
+                        {d.length_mm == null && d.width_mm == null
+                          && d.depth_mm == null && d.count == null && (
+                          <Typography variant="caption" color="textSecondary">—</Typography>
+                        )}
+                      </Box>
+                    </TableCell>
+
+                    <TableCell align="center">
+                      <Typography variant="body2" fontWeight={600}
+                        color={
+                          (d.confidence || 0) >= 0.85 ? "success.main"
+                          : (d.confidence || 0) >= 0.6 ? "warning.main"
+                          : "error.main"
+                        }>
+                        {Math.round((d.confidence || 0) * 100)}%
+                      </Typography>
+                    </TableCell>
+
+                    <TableCell>
+                      <Typography variant="caption" color="textSecondary">
+                        {d.standards_reference || "—"}
+                      </Typography>
+                    </TableCell>
+
+                    <TableCell>
+                      <Typography variant="caption"
+                        sx={{ maxWidth: 180, display: "block" }}>
+                        {d.recommendation || "—"}
+                      </Typography>
+                    </TableCell>
+
+                  </TableRow>
+                ))}
+              </TableBody>
+            </StyledDefectTable>
+          </TableContainer>
+        </Card>
+      )}
+
+      {/* ── Standards compliance ── */}
+      {pair.standards_compliance?.length > 0 && (
+        <Box mb={2}>
+          <ImgLabel sx={{ mb: 0.75 }}>Standards Compliance</ImgLabel>
+          <Box display="flex" flexWrap="wrap" gap={1}>
+            {pair.standards_compliance.map((sc, i) => (
+              <Tooltip key={i} title={sc.notes || ""} arrow>
+                <Chip
+                  label={`${sc.standard}${sc.grade ? ` Grade ${sc.grade}` : ""}: ${sc.compliant ? "✓ Pass" : "✗ Fail"}`}
+                  color={sc.compliant ? "success" : "error"}
+                  size="small" variant="outlined"
+                  sx={{ cursor: "help" }}
+                />
+              </Tooltip>
+            ))}
+          </Box>
+        </Box>
+      )}
+
+      {/* ── Recommendations ── */}
+      {pair.recommendations?.length > 0 && (
+        <Box mb={1}>
+          <ImgLabel sx={{ mb: 0.75 }}>Recommendations</ImgLabel>
+          {pair.recommendations.map((r, i) => (
+            <RecommendationBox key={i}>
+              <Box display="flex" gap={1}>
+                <BuildOutlinedIcon fontSize="small" color="primary"
+                  sx={{ mt: "2px", flexShrink: 0 }} />
+                <Typography variant="body2">{r}</Typography>
+              </Box>
+            </RecommendationBox>
+          ))}
+        </Box>
+      )}
+
+      {/* ── AI notes ── */}
+      {pair.model_notes && (
+        <Box>
+          <ImgLabel sx={{ mb: 0.5 }}>AI Notes</ImgLabel>
+          <Typography variant="body2" color="textSecondary" lineHeight={1.8}>
+            {pair.model_notes}
+          </Typography>
+        </Box>
+      )}
+
+      <PairDivider />
+    </Box>
+  );
+}
+
+// ─── Main component ─────────────────────────────────────────
 export default function LogDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -103,9 +439,16 @@ export default function LogDetailPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [lightboxImg, setLightboxImg] = useState(null);
 
   useEffect(() => {
-    const fetch_ = async () => {
+    const handleKey = (e) => { if (e.key === "Escape") setLightboxImg(null); };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
       setLoading(true);
       setError("");
       try {
@@ -118,11 +461,13 @@ export default function LogDetailPage() {
         setLoading(false);
       }
     };
-    fetch_();
+    fetchData();
   }, [id]);
 
   if (loading) return (
-    <Box display="flex" justifyContent="center" mt={8}><CircularProgress /></Box>
+    <Box display="flex" justifyContent="center" mt={8}>
+      <CircularProgress />
+    </Box>
   );
 
   if (error) return (
@@ -136,6 +481,9 @@ export default function LogDetailPage() {
   return (
     <ContentBox>
 
+      {/* ── Lightbox ── */}
+      <Lightbox src={lightboxImg} onClose={() => setLightboxImg(null)} />
+
       {/* ── Header ── */}
       <Box display="flex" alignItems="flex-start" gap={2} mb={3}>
         <Tooltip title="Back to Logs">
@@ -148,7 +496,8 @@ export default function LogDetailPage() {
             {s.object_name || s.object_id} — Scan #{s.scan_number}
           </Typography>
           <Typography variant="body2" color="textSecondary">
-            {[s.welding_type, s.welding_position, s.side ? `Side: ${s.side}` : null]
+            {[s.welding_type, s.welding_position,
+              s.side ? `Side: ${s.side}` : null]
               .filter(Boolean).join(" · ")}
           </Typography>
           <Typography variant="caption" color="textSecondary">
@@ -162,7 +511,6 @@ export default function LogDetailPage() {
         </Box>
       </Box>
 
-      {/* ── Gemini pending notice ── */}
       {geminiDisabled && (
         <Alert severity="info" sx={{ mb: 2 }}>
           AI analysis is pending — scores and defect data will appear once Gemini is enabled.
@@ -174,8 +522,12 @@ export default function LogDetailPage() {
         <SectionTitle>Session Summary</SectionTitle>
         <Box display="flex" flexWrap="wrap">
           <MetaChip>
-            <Typography variant="caption" color="textSecondary">Frames Analyzed</Typography>
-            <Typography variant="body1" fontWeight={700}>{stats.total_frames_analyzed}</Typography>
+            <Typography variant="caption" color="textSecondary">Total Images</Typography>
+            <Typography variant="body1" fontWeight={700}>{s.frames_extracted}</Typography>
+          </MetaChip>
+          <MetaChip>
+            <Typography variant="caption" color="textSecondary">Pairs Analyzed</Typography>
+            <Typography variant="body1" fontWeight={700}>{per_pair_results.length}</Typography>
           </MetaChip>
           <MetaChip>
             <Typography variant="caption" color="textSecondary">Defects Found</Typography>
@@ -202,7 +554,6 @@ export default function LogDetailPage() {
           </MetaChip>
         </Box>
 
-        {/* Defect breakdown */}
         {stats.defect_breakdown?.length > 0 && (
           <Box mt={1}>
             <SectionTitle sx={{ mb: 0.5 }}>Defect Breakdown</SectionTitle>
@@ -219,93 +570,30 @@ export default function LogDetailPage() {
       </SectionCard>
 
       {/* ── Compile chart ── */}
-      {s.compile_chart_url && (
+      {/* {s.compile_chart_url && (
         <SectionCard elevation={3}>
-          <SectionTitle>Compile Chart — Full Session Overview</SectionTitle>
-          <img
-            src={s.compile_chart_url} alt="Compile chart"
-            style={{ width: "100%", borderRadius: 8, display: "block" }}
+          <SectionTitle>Full Session Overview Chart</SectionTitle>
+          <FullImg
+            src={s.compile_chart_url}
+            alt="Compile chart"
+            onClick={() => setLightboxImg(s.compile_chart_url)}
           />
         </SectionCard>
-      )}
+      )} */}
 
-      {/* ── Image grid ── */}
+      {/* ── All pairs ── */}
       <SectionCard elevation={3}>
         <SectionTitle>
-          Analyzed Frame Pairs ({per_pair_results.length})
-          <Typography component="span" variant="caption" color="textSecondary" ml={1}>
-            — click any image to view full details
-          </Typography>
+          Pair-by-Pair Analysis — {per_pair_results.length} pair{per_pair_results.length !== 1 ? "s" : ""}
         </SectionTitle>
-
-        <Grid container spacing={2}>
-          {per_pair_results.map((pair) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={pair.frame_index}>
-              <ImageCard
-                elevation={2}
-                onClick={() => navigate(`/logs/${id}/frame/${pair.image_label}`)}
-              >
-                {/* Stitched image thumbnail */}
-                {pair.stitched_image_url ? (
-                  <StitchedImg
-                    src={pair.stitched_image_url}
-                    alt={`Frame pair ${pair.image_label}`}
-                  />
-                ) : (
-                  <ImgPlaceholder>
-                    <ImageSearchIcon sx={{ fontSize: 40 }} />
-                  </ImgPlaceholder>
-                )}
-
-                {/* Card footer */}
-                <Box px={1.5} py={1}>
-                  <Box display="flex" alignItems="center" justifyContent="space-between" mb={0.5}>
-                    <Typography variant="body2" fontWeight={700}>
-                      {pair.source_frame_a_label}
-                      {pair.source_frame_b_label ? ` & ${pair.source_frame_b_label}` : ""}
-                    </Typography>
-                    <Chip
-                      label={pair.overall_result === "review" && pair.weld_quality_score === 0
-                        ? "Pending" : pair.overall_result.toUpperCase()}
-                      color={resultColor(pair.overall_result)}
-                      size="small"
-                    />
-                  </Box>
-
-                  {/* Score bar */}
-                  {pair.weld_quality_score > 0 && (
-                    <Box>
-                      <Typography variant="caption" color="textSecondary">
-                        Score: {pair.weld_quality_score}/100
-                      </Typography>
-                      <Box
-                        sx={{
-                          mt: 0.5, height: 5, borderRadius: 3,
-                          backgroundColor: "action.hover",
-                          overflow: "hidden"
-                        }}
-                      >
-                        <Box sx={{
-                          height: "100%",
-                          width: `${pair.weld_quality_score}%`,
-                          backgroundColor: scoreBarColor(pair.weld_quality_score),
-                          borderRadius: 3
-                        }} />
-                      </Box>
-                    </Box>
-                  )}
-
-                  {/* Defect count */}
-                  <Typography variant="caption" color="textSecondary" display="block" mt={0.5}>
-                    {pair.defects?.length > 0
-                      ? `${pair.defects.length} defect${pair.defects.length > 1 ? "s" : ""} found`
-                      : pair.weld_quality_score > 0 ? "No defects" : ""}
-                  </Typography>
-                </Box>
-              </ImageCard>
-            </Grid>
-          ))}
-        </Grid>
+        {per_pair_results.map((pair, index) => (
+          <PairSection
+            key={pair.frame_index}
+            pair={pair}
+            index={index}
+            onImageClick={setLightboxImg}
+          />
+        ))}
       </SectionCard>
 
     </ContentBox>
