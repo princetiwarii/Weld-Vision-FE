@@ -4,55 +4,79 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { styled } from "@mui/material/styles";
 import {
-  Box, Card, Chip, CircularProgress, FormControl,
-  InputAdornment, InputLabel, MenuItem, Pagination,
-  Select, Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, TextField, Tooltip, Typography, Alert, Button
+  Box,
+  Card,
+  Chip,
+  CircularProgress,
+  FormControl,
+  InputAdornment,
+  InputLabel,
+  MenuItem,
+  Pagination,
+  Select,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Tooltip,
+  Typography,
+  Alert,
+  Button,
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import SearchIcon from "@mui/icons-material/Search";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import { BASE_URL } from "app/config";
 
 // ─── Styled ────────────────────────────────────────────────
 const ContentBox = styled("div")(({ theme }) => ({
   margin: "2rem",
-  [theme.breakpoints.down("sm")]: { margin: "1rem" }
+  [theme.breakpoints.down("sm")]: { margin: "1rem" },
 }));
 
 const StyledTableHead = styled(TableHead)(({ theme }) => ({
-  backgroundColor: theme.palette.action.hover
+  backgroundColor: theme.palette.action.hover,
 }));
 
 const StyledTableRow = styled(TableRow)(({ theme }) => ({
-  "&:hover": { backgroundColor: theme.palette.action.hover }
+  "&:hover": { backgroundColor: theme.palette.action.hover },
 }));
 
 const StyledTable = styled(Table)(() => ({
   "& .MuiTableCell-root": {
-    paddingLeft: "20px",
-    paddingRight: "16px",
-    paddingTop: "14px",
-    paddingBottom: "14px"
+    paddingLeft: "12px",
+    paddingRight: "12px",
+    paddingTop: "12px",
+    paddingBottom: "12px",
+    whiteSpace: "nowrap",
   },
   "& .MuiTableCell-head": {
-    paddingTop: "13px",
-    paddingBottom: "13px"
-  }
+    paddingTop: "12px",
+    paddingBottom: "12px",
+  },
 }));
 
 const ViewLink = styled("span")(({ theme }) => ({
   color: theme.palette.primary.main,
-  fontWeight: 500,
   cursor: "pointer",
-  fontSize: "0.875rem",
-  "&:hover": { textDecoration: "underline" }
+  display: "inline-flex",
+  alignItems: "center",
+  borderRadius: "50%",
+  padding: "4px",
+  transition: "background 0.15s",
+  "&:hover": { backgroundColor: theme.palette.action.hover },
 }));
 
 const ComplianceDot = styled("span")(({ pass }) => ({
   display: "inline-block",
-  width: 9, height: 9, borderRadius: "50%",
+  width: 9,
+  height: 9,
+  borderRadius: "50%",
   backgroundColor: pass === "true" ? "#4caf50" : "#f44336",
-  marginRight: 5
+  flexShrink: 0,
 }));
 
 // ─── Helpers ───────────────────────────────────────────────
@@ -62,16 +86,12 @@ function scoreChipColor(score) {
   return "error";
 }
 
-function scoreLabel(score) {
-  if (score >= 85) return "Good";
-  if (score >= 60) return "Average";
-  return "Poor";
-}
-
 function formatDate(iso) {
   return new Date(iso).toLocaleString("en-IN", {
-    day: "2-digit", month: "short", year: "numeric",
-    hour: "2-digit", minute: "2-digit"
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
@@ -93,7 +113,9 @@ export default function LogsPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`${BASE_URL}/api/v1/inspections/sessions?limit=100`);
+      const res = await fetch(
+        `${BASE_URL}/api/v1/inspections/sessions?limit=100`,
+      );
       if (!res.ok) throw new Error(`Server error: ${res.status}`);
       const data = await res.json();
       setAllSessions(data.sessions || []);
@@ -104,8 +126,12 @@ export default function LogsPage() {
     }
   }, []);
 
-  useEffect(() => { fetchSessions(); }, [fetchSessions]);
-  useEffect(() => { setPage(1); }, [search, statusFilter, pageSize]);
+  useEffect(() => {
+    fetchSessions();
+  }, [fetchSessions]);
+  useEffect(() => {
+    setPage(1);
+  }, [search, statusFilter, pageSize]);
 
   const filtered = allSessions.filter((s) => {
     const q = search.toLowerCase();
@@ -123,18 +149,33 @@ export default function LogsPage() {
 
   return (
     <ContentBox>
-
       {/* ── Header ── */}
-      <Box display="flex" alignItems="center" justifyContent="space-between" mb={3} flexWrap="wrap" gap={2}>
+      <Box
+        display="flex"
+        alignItems="center"
+        justifyContent="space-between"
+        mb={3}
+        flexWrap="wrap"
+        gap={2}
+      >
         <Typography variant="h6" fontWeight={600}>
           Inspection Logs
           {!loading && (
-            <Typography component="span" variant="caption" color="textSecondary" ml={1}>
+            <Typography
+              component="span"
+              variant="caption"
+              color="textSecondary"
+              ml={1}
+            >
               ({filtered.length} session{filtered.length !== 1 ? "s" : ""})
             </Typography>
           )}
         </Typography>
-        <Button size="small" startIcon={<RefreshIcon />} onClick={fetchSessions}>
+        <Button
+          size="small"
+          startIcon={<RefreshIcon />}
+          onClick={fetchSessions}
+        >
           Refresh
         </Button>
       </Box>
@@ -152,13 +193,16 @@ export default function LogsPage() {
               <InputAdornment position="start">
                 <SearchIcon fontSize="small" />
               </InputAdornment>
-            )
+            ),
           }}
         />
         <FormControl size="small" sx={{ minWidth: 150 }}>
           <InputLabel>Status</InputLabel>
-          <Select value={statusFilter} label="Status"
-            onChange={(e) => setStatusFilter(e.target.value)}>
+          <Select
+            value={statusFilter}
+            label="Status"
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
             <MenuItem value="all">All Statuses</MenuItem>
             <MenuItem value="completed">Completed</MenuItem>
             <MenuItem value="processing">Processing</MenuItem>
@@ -167,10 +211,15 @@ export default function LogsPage() {
         </FormControl>
         <FormControl size="small" sx={{ minWidth: 120 }}>
           <InputLabel>Per Page</InputLabel>
-          <Select value={pageSize} label="Per Page"
-            onChange={(e) => setPageSize(e.target.value)}>
+          <Select
+            value={pageSize}
+            label="Per Page"
+            onChange={(e) => setPageSize(e.target.value)}
+          >
             {PAGE_SIZE_OPTIONS.map((n) => (
-              <MenuItem key={n} value={n}>{n} / page</MenuItem>
+              <MenuItem key={n} value={n}>
+                {n} / page
+              </MenuItem>
             ))}
           </Select>
         </FormControl>
@@ -178,7 +227,9 @@ export default function LogsPage() {
 
       {/* ── Error ── */}
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")}>{error}</Alert>
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")}>
+          {error}
+        </Alert>
       )}
 
       {/* ── Loading ── */}
@@ -186,14 +237,12 @@ export default function LogsPage() {
         <Box display="flex" justifyContent="center" mt={6}>
           <CircularProgress />
         </Box>
-
       ) : filtered.length === 0 ? (
         <Alert severity="info">
           {allSessions.length === 0
             ? "No inspection sessions found. Submit your first inspection!"
             : "No sessions match your search or filter."}
         </Alert>
-
       ) : (
         <>
           <Card elevation={3} sx={{ borderRadius: 2, overflow: "hidden" }}>
@@ -201,73 +250,192 @@ export default function LogsPage() {
               <StyledTable>
                 <StyledTableHead>
                   <TableRow>
-                    <TableCell><strong>Object</strong></TableCell>
-                    <TableCell><strong>Scan</strong></TableCell>
-                    <TableCell><strong>Analyzed At</strong></TableCell>
-                    <TableCell align="center"><strong>Frames</strong></TableCell>
-                    <TableCell align="center"><strong>Defects</strong></TableCell>
-                    <TableCell align="center"><strong>Avg Score</strong></TableCell>
-                    <TableCell align="center"><strong>AWS / ISO</strong></TableCell>
-                    <TableCell align="center"><strong>Status</strong></TableCell>
-                    <TableCell align="center"><strong>Action</strong></TableCell>
+                    <TableCell>
+                      <strong>Object</strong>
+                    </TableCell>
+                    <TableCell>
+                      <strong>Scan</strong>
+                    </TableCell>
+                    <TableCell>
+                      <strong>Date</strong>
+                    </TableCell>
+                    <TableCell align="center">
+                      <strong>Frames</strong>
+                    </TableCell>
+                    <TableCell align="center">
+                      <strong>Defects</strong>
+                    </TableCell>
+                    <TableCell align="center">
+                      <strong>Score</strong>
+                    </TableCell>
+                    <TableCell align="center">
+                      <strong>AWS / ISO</strong>
+                    </TableCell>
+                    <TableCell align="center">
+                      <strong>Status</strong>
+                    </TableCell>
+                    <TableCell align="center">
+                      <strong>Action</strong>
+                    </TableCell>
                   </TableRow>
                 </StyledTableHead>
 
                 <TableBody>
                   {paginated.map((s) => (
                     <StyledTableRow key={s.session_id}>
-
+                      {/* Object — name + ID only */}
+                      <TableCell sx={{ maxWidth: 160 }}>
+                        <Tooltip
+                          title={s.object_name || s.object_id}
+                          arrow
+                          placement="top"
+                        >
+                          <Typography
+                            variant="body2"
+                            fontWeight={600}
+                            sx={{
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                              maxWidth: 150,
+                              cursor: "default",
+                            }}
+                          >
+                            {s.object_name || s.object_id}
+                          </Typography>
+                        </Tooltip>
+                        <Tooltip
+                          title={`ID: ${s.object_id}${s.side ? ` · ${s.side}` : ""}`}
+                          arrow
+                          placement="top"
+                        >
+                          <Typography
+                            variant="caption"
+                            color="textSecondary"
+                            sx={{
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                              display: "block",
+                              maxWidth: 150,
+                              cursor: "default",
+                            }}
+                          >
+                            ID: {s.object_id}
+                            {s.side ? ` · ${s.side}` : ""}
+                          </Typography>
+                        </Tooltip>
+                      </TableCell>
+                      {/* Scan — slim, just # and side */}
                       <TableCell>
-                        <Typography variant="body2" fontWeight={600}>
-                          {s.object_name || s.object_id}
+                        <Typography variant="body2" noWrap>
+                          #{s.scan_number || "—"}
                         </Typography>
-                        <Typography variant="caption" color="textSecondary">
-                          ID: {s.object_id} · {s.side}
-                        </Typography>
+                        {s.side && (
+                          <Typography variant="caption" color="textSecondary">
+                            {s.side}
+                          </Typography>
+                        )}
                       </TableCell>
 
+                      {/* Date */}
                       <TableCell>
-                        <Typography variant="body2">Scan #{s.scan_number}</Typography>
-                      </TableCell>
-
-                      <TableCell>
-                        <Typography variant="body2" color="textSecondary">
+                        <Typography
+                          variant="body2"
+                          color="textSecondary"
+                          sx={{ whiteSpace: "nowrap" }}
+                        >
                           {formatDate(s.created_at)}
                         </Typography>
                       </TableCell>
 
                       <TableCell align="center">
-                        <Typography variant="body2">{s.frames_extracted}</Typography>
-                      </TableCell>
-
-                      <TableCell align="center">
-                        <Chip
-                          label={s.total_defects_found === 0 ? "None" : s.total_defects_found}
-                          color={s.total_defects_found === 0 ? "success" : "error"}
-                          size="small"
-                        />
+                        <Typography variant="body2">
+                          {s.frames_extracted}
+                        </Typography>
                       </TableCell>
 
                       <TableCell align="center">
                         <Chip
                           label={
-                            s.avg_quality_score > 0
-                              ? `${s.avg_quality_score} — ${scoreLabel(s.avg_quality_score)}`
-                              : "Pending"
+                            s.total_defects_found === 0
+                              ? "None"
+                              : s.total_defects_found
                           }
-                          color={s.avg_quality_score > 0 ? scoreChipColor(s.avg_quality_score) : "default"}
+                          color={
+                            s.total_defects_found === 0 ? "success" : "error"
+                          }
                           size="small"
                         />
                       </TableCell>
 
+                      {/* Score — number only */}
                       <TableCell align="center">
-                        <Box display="flex" justifyContent="center" gap={1.5}>
-                          <Typography variant="caption">
-                            <ComplianceDot pass={String(s.overall_compliance_aws)} />AWS
-                          </Typography>
-                          <Typography variant="caption">
-                            <ComplianceDot pass={String(s.overall_compliance_iso)} />ISO
-                          </Typography>
+                        <Chip
+                          label={
+                            s.avg_quality_score > 0
+                              ? `${s.avg_quality_score}`
+                              : "—"
+                          }
+                          color={
+                            s.avg_quality_score > 0
+                              ? scoreChipColor(s.avg_quality_score)
+                              : "default"
+                          }
+                          size="small"
+                        />
+                      </TableCell>
+
+                      {/* AWS / ISO — dots + labels with tooltips */}
+                      <TableCell align="center">
+                        <Box
+                          display="flex"
+                          justifyContent="center"
+                          alignItems="center"
+                          gap={1}
+                        >
+                          <Tooltip
+                            title={`AWS: ${s.overall_compliance_aws ? "Pass" : "Fail"}`}
+                            arrow
+                          >
+                            <Box
+                              display="flex"
+                              alignItems="center"
+                              gap={0.5}
+                              sx={{ cursor: "default" }}
+                            >
+                              <ComplianceDot
+                                pass={String(s.overall_compliance_aws)}
+                              />
+                              <Typography
+                                variant="caption"
+                                color="textSecondary"
+                              >
+                                AWS
+                              </Typography>
+                            </Box>
+                          </Tooltip>
+                          <Tooltip
+                            title={`ISO: ${s.overall_compliance_iso ? "Pass" : "Fail"}`}
+                            arrow
+                          >
+                            <Box
+                              display="flex"
+                              alignItems="center"
+                              gap={0.5}
+                              sx={{ cursor: "default" }}
+                            >
+                              <ComplianceDot
+                                pass={String(s.overall_compliance_iso)}
+                              />
+                              <Typography
+                                variant="caption"
+                                color="textSecondary"
+                              >
+                                ISO
+                              </Typography>
+                            </Box>
+                          </Tooltip>
                         </Box>
                       </TableCell>
 
@@ -275,9 +443,11 @@ export default function LogsPage() {
                         <Chip
                           label={s.status}
                           color={
-                            s.status === "completed" ? "success"
-                            : s.status === "processing" ? "warning"
-                            : "error"
+                            s.status === "completed"
+                              ? "success"
+                              : s.status === "processing"
+                                ? "warning"
+                                : "error"
                           }
                           size="small"
                           variant="outlined"
@@ -285,13 +455,14 @@ export default function LogsPage() {
                       </TableCell>
 
                       <TableCell align="center">
-                        <Tooltip title="View full analysis">
-                          <ViewLink onClick={() => navigate(`/logs/${s.session_id}`)}>
-                            View Details →
+                        <Tooltip title="View full analysis" arrow>
+                          <ViewLink
+                            onClick={() => navigate(`/logs/${s.session_id}`)}
+                          >
+                            <VisibilityIcon fontSize="small" />
                           </ViewLink>
                         </Tooltip>
                       </TableCell>
-
                     </StyledTableRow>
                   ))}
                 </TableBody>
@@ -299,11 +470,19 @@ export default function LogsPage() {
             </TableContainer>
           </Card>
 
-          {/* ── Pagination controls ── */}
-          <Box display="flex" alignItems="center" justifyContent="space-between"
-            flexWrap="wrap" gap={2} mt={2.5}>
+          {/* ── Pagination ── */}
+          <Box
+            display="flex"
+            alignItems="center"
+            justifyContent="space-between"
+            flexWrap="wrap"
+            gap={2}
+            mt={2.5}
+          >
             <Typography variant="caption" color="textSecondary">
-              Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, filtered.length)} of {filtered.length} sessions
+              Showing {(page - 1) * pageSize + 1}–
+              {Math.min(page * pageSize, filtered.length)} of {filtered.length}{" "}
+              sessions
             </Typography>
             <Pagination
               count={totalPages}
