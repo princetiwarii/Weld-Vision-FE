@@ -169,6 +169,7 @@ function Lightbox({ src, onClose }) {
   const dragRef = useRef(null); // { startX, startY, origX, origY }
   const pinchRef = useRef(null); // { startDist, startScale }
   const containerRef = useRef(null);
+  
 
   // reset transform whenever a new image opens
   useEffect(() => {
@@ -444,6 +445,8 @@ function Lightbox({ src, onClose }) {
 function PairSection({ pair, index, onImageClick }) {
   const isPending =
     pair.weld_quality_score === 0 && pair.overall_result === "review";
+
+    
 
   return (
     <Box mb={4}>
@@ -742,6 +745,13 @@ export default function LogDetailPage() {
   const [lightboxImg, setLightboxImg] = useState(null);
   const [page, setPage] = useState(0);
 
+  const topRef = useRef(null);
+
+const goToPage = (p) => {
+  setPage(p);
+  topRef.current?.scrollIntoView({ behavior: "smooth" });
+};
+
   useEffect(() => {
     const handleKey = (e) => {
       if (e.key === "Escape") setLightboxImg(null);
@@ -789,10 +799,38 @@ export default function LogDetailPage() {
   const geminiDisabled =
     avgScore === 0 && stats.pass_count === 0 && stats.fail_count === 0;
 
+    const PaginationControls = () =>
+  per_pair_results.length > 1 ? (
+    <Box display="flex" justifyContent="space-between" alignItems="center" my={2}>
+      <Button
+        variant="outlined"
+        startIcon={<ArrowBackIosNewIcon />}
+        disabled={page === 0}
+        onClick={() => goToPage(page - 1)}
+      >
+        Previous
+      </Button>
+      {/* <Typography variant="body2" color="textSecondary" fontWeight={600}>
+        Pair {page + 1} of {per_pair_results.length}
+      </Typography> */}
+      <Button
+        variant="outlined"
+        endIcon={<ArrowForwardIcon />}
+        disabled={page === per_pair_results.length - 1}
+        onClick={() => goToPage(page + 1)}
+      >
+        Next
+      </Button>
+    </Box>
+  ) : null;
+
   return (
     <ContentBox>
+        <div ref={topRef} />  
       {/* ── Lightbox ── */}
       <Lightbox src={lightboxImg} onClose={() => setLightboxImg(null)} />
+
+    
 
       {/* ── Header ── */}
       <Box display="flex" alignItems="flex-start" gap={2} mb={3}>
@@ -913,6 +951,8 @@ export default function LogDetailPage() {
         )}
       </SectionCard>
 
+      <PaginationControls /> 
+
       {/* ── Compile chart ── */}
       {/* {s.compile_chart_url && (
         <SectionCard elevation={3}>
@@ -956,36 +996,7 @@ export default function LogDetailPage() {
         </SectionCard>
       )}
 
-      {per_pair_results.length > 1 && (
-        <Box
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          mt={2}
-        >
-          <Button
-            variant="outlined"
-            startIcon={<ArrowBackIosNewIcon />}
-            disabled={page === 0}
-            onClick={() => setPage(page - 1)}
-          >
-            Previous
-          </Button>
-
-          <Typography variant="body2" color="textSecondary">
-            Page {page + 1} of {per_pair_results.length}
-          </Typography>
-
-          <Button
-            variant="outlined"
-            endIcon={<ArrowForwardIcon />}
-            disabled={page === per_pair_results.length - 1}
-            onClick={() => setPage(page + 1)}
-          >
-            Next
-          </Button>
-        </Box>
-      )}
+   <PaginationControls />
     </ContentBox>
   );
 }
