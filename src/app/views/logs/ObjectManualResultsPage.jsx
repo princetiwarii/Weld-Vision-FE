@@ -174,8 +174,10 @@ export default function ObjectManualResultsPage() {
   const charts = [];
 
   sessions.forEach((s) => {
-    const chartUrl = s.compile_chart_url || (s.session && s.session.compile_chart_url);
+    let chartUrl = s.compile_chart_url || (s.session && s.session.compile_chart_url);
     if (chartUrl && !charts.includes(chartUrl)) {
+      // Append a cache-busting parameter since manual chart overrides keep the same S3 URL
+      chartUrl = `${chartUrl}?t=${new Date().getTime()}`;
       charts.push(chartUrl);
     }
     const results = s.per_pair_results || s.per_image_results || [];
