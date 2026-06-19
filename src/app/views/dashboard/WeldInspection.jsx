@@ -195,7 +195,7 @@ export default function WeldInspection() {
     images.forEach(({ file }, i) => formData.append("images", file, `frame${i + 1}.jpg`));
 
     try {
-      const res = await fetch(`${BASE_URL}/api/v1/inspections/video`, {
+      const res = await fetch(`${BASE_URL}/api/v1/inspections/images`, {
         method: "POST",
         body: formData
       });
@@ -268,12 +268,8 @@ export default function WeldInspection() {
           <SectionTitle>Session Summary</SectionTitle>
           <Box display="flex" flexWrap="wrap" mb={1}>
             <MetaChip>
-              <Typography variant="caption" color="textSecondary">Frames Uploaded</Typography>
-              <Typography variant="body1" fontWeight={700}>{result.frames_extracted}</Typography>
-            </MetaChip>
-            <MetaChip>
-              <Typography variant="caption" color="textSecondary">Pairs Analyzed</Typography>
-              <Typography variant="body1" fontWeight={700}>{result.frame_pairs_analyzed}</Typography>
+              <Typography variant="caption" color="textSecondary">Images Analyzed</Typography>
+              <Typography variant="body1" fontWeight={700}>{stats.total_images_analyzed}</Typography>
             </MetaChip>
             <MetaChip>
               <Typography variant="caption" color="textSecondary">Defects Found</Typography>
@@ -321,21 +317,21 @@ export default function WeldInspection() {
         {/* ── Image grid ── */}
         <SectionCard elevation={3}>
           <SectionTitle>
-            Analyzed Frame Pairs ({result.per_pair_results.length})
+            Analyzed Images ({result.per_image_results.length})
             <Typography component="span" variant="caption" color="textSecondary" ml={1}>
               — click any image to view full details
             </Typography>
           </SectionTitle>
 
           <Grid container spacing={2}>
-            {result.per_pair_results.map((pair) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={pair.frame_index}>
+            {result.per_image_results.map((item) => (
+              <Grid item xs={12} sm={6} md={4} lg={3} key={item.image_index}>
                 <ImageCard
                   elevation={2}
-                  onClick={() => navigate(`/logs/${result.session_id}/frame/${pair.image_label}`)}
+                  onClick={() => navigate(`/logs/${result.session_id}/frame/${item.image_label}`)}
                 >
-                  {pair.stitched_image_url ? (
-                    <StitchedImg src={pair.stitched_image_url} alt={pair.image_label} />
+                  {item.annotated_image_url || item.original_image_url ? (
+                    <StitchedImg src={item.annotated_image_url || item.original_image_url} alt={item.image_label} />
                   ) : (
                     <ImgPlaceholder>
                       <ImageSearchIcon sx={{ fontSize: 40 }} />
@@ -346,23 +342,22 @@ export default function WeldInspection() {
                     <Box display="flex" alignItems="center"
                       justifyContent="space-between" mb={0.5}>
                       <Typography variant="body2" fontWeight={700}>
-                        {pair.source_frame_a_label}
-                        {pair.source_frame_b_label ? ` & ${pair.source_frame_b_label}` : ""}
+                        {item.image_label}
                       </Typography>
                       <Chip
                         label={
-                          pair.overall_result === "review" && pair.weld_quality_score === 0
-                            ? "Pending" : pair.overall_result.toUpperCase()
+                          item.overall_result === "review" && item.weld_quality_score === 0
+                            ? "Pending" : item.overall_result.toUpperCase()
                         }
-                        color={resultColor(pair.overall_result)}
+                        color={resultColor(item.overall_result)}
                         size="small"
                       />
                     </Box>
 
-                    {pair.weld_quality_score > 0 && (
+                    {item.weld_quality_score > 0 && (
                       <Box>
                         <Typography variant="caption" color="textSecondary">
-                          Score: {pair.weld_quality_score}/100
+                          Score: {item.weld_quality_score}/100
                         </Typography>
                         <Box sx={{
                           mt: 0.5, height: 5, borderRadius: 3,
@@ -370,8 +365,8 @@ export default function WeldInspection() {
                         }}>
                           <Box sx={{
                             height: "100%",
-                            width: `${pair.weld_quality_score}%`,
-                            backgroundColor: scoreBarColor(pair.weld_quality_score),
+                            width: `${item.weld_quality_score}%`,
+                            backgroundColor: scoreBarColor(item.weld_quality_score),
                             borderRadius: 3
                           }} />
                         </Box>
@@ -380,9 +375,9 @@ export default function WeldInspection() {
 
                     <Typography variant="caption" color="textSecondary"
                       display="block" mt={0.5}>
-                      {pair.defects?.length > 0
-                        ? `${pair.defects.length} defect${pair.defects.length > 1 ? "s" : ""} found`
-                        : pair.weld_quality_score > 0 ? "No defects" : ""}
+                      {item.defects?.length > 0
+                        ? `${item.defects.length} defect${item.defects.length > 1 ? "s" : ""} found`
+                        : item.weld_quality_score > 0 ? "No defects" : ""}
                     </Typography>
                   </Box>
                 </ImageCard>

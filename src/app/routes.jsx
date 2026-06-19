@@ -8,6 +8,7 @@ const WeldInspection  = Loadable(lazy(() => import("app/views/dashboard/WeldInsp
 const LogsPage        = Loadable(lazy(() => import("app/views/logs/LogsPage")));
 const LogDetailPage   = Loadable(lazy(() => import("app/views/logs/LogDetailPage")));
 const FrameDetailPage = Loadable(lazy(() => import("app/views/logs/FrameDetailPage")));
+const ObjectManualResultsPage = Loadable(lazy(() => import("app/views/logs/ObjectManualResultsPage")));
 
 const routes = [
   { path: "/", element: <Navigate to="/dashboard/default" /> },
@@ -17,6 +18,7 @@ const routes = [
       { path: "/dashboard/default",            element: <WeldInspection />  },
       { path: "/logs",                          element: <LogsPage />        },
       { path: "/logs/:id",                      element: <LogDetailPage />   },
+      { path: "/logs/object/:objectId",         element: <ObjectManualResultsPage /> },
       { path: "/logs/:id/frame/:imageLabel",    element: <FrameDetailPage /> },
     ]
   },

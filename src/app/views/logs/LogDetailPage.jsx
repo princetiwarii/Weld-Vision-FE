@@ -441,16 +441,16 @@ function Lightbox({ src, onClose }) {
   );
 }
 
-// ─── Single pair section ────────────────────────────────────
-function PairSection({ pair, index, onImageClick }) {
+// ─── Single image section ────────────────────────────────────
+function ImageSection({ item, index, onImageClick }) {
   const isPending =
-    pair.weld_quality_score === 0 && pair.overall_result === "review";
+    item.weld_quality_score === 0 && item.overall_result === "review";
 
     
 
   return (
     <Box mb={4}>
-      {/* ── Pair header ── */}
+      {/* ── Header ── */}
       <Box display="flex" alignItems="center" gap={1.5} mb={2}>
         <Box
           sx={{
@@ -469,34 +469,33 @@ function PairSection({ pair, index, onImageClick }) {
           {index + 1}
         </Box>
         <Typography variant="subtitle1" fontWeight={700}>
-          {pair.source_frame_a_label}
-          {pair.source_frame_b_label ? ` + ${pair.source_frame_b_label}` : ""}
+          {item.image_label || item.source_frame_a_label}
         </Typography>
         <Chip
-          label={isPending ? "AI Pending" : pair.overall_result.toUpperCase()}
-          color={resultColor(pair.overall_result)}
+          label={isPending ? "AI Pending" : item.overall_result.toUpperCase()}
+          color={resultColor(item.overall_result)}
           size="small"
           sx={{ fontWeight: 600 }}
         />
-        {!isPending && pair.weld_quality_score > 0 && (
+        {!isPending && item.weld_quality_score > 0 && (
           <Typography variant="caption" color="textSecondary">
-            Score: <strong>{pair.weld_quality_score}/100</strong>
+            Score: <strong>{item.weld_quality_score}/100</strong>
           </Typography>
         )}
       </Box>
 
       {/* ── Score bar ── */}
-      {!isPending && pair.weld_quality_score > 0 && (
+      {!isPending && item.weld_quality_score > 0 && (
         <Box mb={2}>
           <LinearProgress
             variant="determinate"
-            value={pair.weld_quality_score}
+            value={item.weld_quality_score}
             sx={{
               height: 7,
               borderRadius: 4,
               backgroundColor: "action.hover",
               "& .MuiLinearProgress-bar": {
-                backgroundColor: scoreBarColor(pair.weld_quality_score),
+                backgroundColor: scoreBarColor(item.weld_quality_score),
                 borderRadius: 4,
               },
             }}
@@ -507,19 +506,19 @@ function PairSection({ pair, index, onImageClick }) {
       {/* ── Original image ── */}
       <ImgLabel>Original Image</ImgLabel>
       <FullImg
-        src={pair.stitched_image_url}
-        alt={`${pair.source_frame_a_label} original`}
+        src={item.original_image_url || item.stitched_image_url}
+        alt={`${item.image_label || item.source_frame_a_label} original`}
         sx={{ mb: 2.5 }}
-        onClick={() => onImageClick(pair.stitched_image_url)}
+        onClick={() => onImageClick(item.original_image_url || item.stitched_image_url)}
       />
 
       {/* ── AI Labeled image ── */}
       <ImgLabel>AI Labeled Image</ImgLabel>
       <FullImg
-        src={pair.annotated_image_url}
-        alt={`${pair.source_frame_a_label} labeled`}
+        src={item.annotated_image_url}
+        alt={`${item.image_label || item.source_frame_a_label} labeled`}
         sx={{ mb: 2.5 }}
-        onClick={() => onImageClick(pair.annotated_image_url)}
+        onClick={() => onImageClick(item.annotated_image_url)}
       />
 
       {/* ── Defects table ── */}
@@ -528,7 +527,7 @@ function PairSection({ pair, index, onImageClick }) {
         <Alert severity="info" sx={{ mb: 2 }}>
           AI analysis pending — defect data will appear once Gemini is enabled.
         </Alert>
-      ) : pair.defects?.length === 0 ? (
+      ) : item.defects?.length === 0 ? (
         <Box
           display="flex"
           alignItems="center"
@@ -538,7 +537,7 @@ function PairSection({ pair, index, onImageClick }) {
         >
           <CheckCircleOutlineIcon fontSize="small" />
           <Typography variant="body2">
-            No defects detected in this pair.
+            No defects detected in this image.
           </Typography>
         </Box>
       ) : (
@@ -561,7 +560,7 @@ function PairSection({ pair, index, onImageClick }) {
                 </TableRow>
               </StyledTableHead>
               <TableBody>
-                {pair.defects.map((d, i) => (
+                {item.defects.map((d, i) => (
                   <TableRow
                     key={d.defect_id || i}
                     sx={{ "&:hover": { backgroundColor: "action.hover" } }}
@@ -681,11 +680,11 @@ function PairSection({ pair, index, onImageClick }) {
       )}
 
       {/* ── Standards compliance ── */}
-      {pair.standards_compliance?.length > 0 && (
+      {item.standards_compliance?.length > 0 && (
         <Box mb={2}>
           <ImgLabel sx={{ mb: 0.75 }}>Standards Compliance</ImgLabel>
           <Box display="flex" flexWrap="wrap" gap={1}>
-            {pair.standards_compliance.map((sc, i) => (
+            {item.standards_compliance.map((sc, i) => (
               <Tooltip key={i} title={sc.notes || ""} arrow>
                 <Chip
                   label={`${sc.standard}${sc.grade ? ` Grade ${sc.grade}` : ""}: ${sc.compliant ? "✓ Pass" : "✗ Fail"}`}
@@ -701,10 +700,10 @@ function PairSection({ pair, index, onImageClick }) {
       )}
 
       {/* ── Recommendations ── */}
-      {pair.recommendations?.length > 0 && (
+      {item.recommendations?.length > 0 && (
         <Box mb={1}>
           <ImgLabel sx={{ mb: 0.75 }}>Recommendations</ImgLabel>
-          {pair.recommendations.map((r, i) => (
+          {item.recommendations.map((r, i) => (
             <RecommendationBox key={i}>
               <Box display="flex" gap={1}>
                 <BuildOutlinedIcon
@@ -720,11 +719,11 @@ function PairSection({ pair, index, onImageClick }) {
       )}
 
       {/* ── AI notes ── */}
-      {pair.model_notes && (
+      {item.model_notes && (
         <Box>
           <ImgLabel sx={{ mb: 0.5 }}>AI Notes</ImgLabel>
           <Typography variant="body2" color="textSecondary" lineHeight={1.8}>
-            {pair.model_notes}
+            {item.model_notes}
           </Typography>
         </Box>
       )}
@@ -793,14 +792,17 @@ const goToPage = (p) => {
       </ContentBox>
     );
 
-  const { session: s, per_pair_results, statistical_summary: stats } = data;
+  const { session: s, per_image_results, statistical_summary: stats } = data;
   const avgScore = stats.average_quality_score ?? stats.avg_quality_score ?? 0;
-  const currentPair = per_pair_results[page];
+  
+  // Use per_image_results if it exists, otherwise fallback for video schema per_frame_results, or older per_pair_results
+  const resultsList = per_image_results || data.per_frame_results || data.per_pair_results || [];
+  const currentItem = resultsList[page];
   const geminiDisabled =
     avgScore === 0 && stats.pass_count === 0 && stats.fail_count === 0;
 
     const PaginationControls = () =>
-  per_pair_results.length > 1 ? (
+  resultsList.length > 1 ? (
     <Box display="flex" justifyContent="space-between" alignItems="center" my={2}>
       <Button
         variant="outlined"
@@ -816,7 +818,7 @@ const goToPage = (p) => {
       <Button
         variant="outlined"
         endIcon={<ArrowForwardIcon />}
-        disabled={page === per_pair_results.length - 1}
+        disabled={page === resultsList.length - 1}
         onClick={() => goToPage(page + 1)}
       >
         Next
@@ -893,10 +895,10 @@ const goToPage = (p) => {
           </MetaChip>
           <MetaChip>
             <Typography variant="caption" color="textSecondary">
-              Pairs Analyzed
+              Images Analyzed
             </Typography>
             <Typography variant="body1" fontWeight={700}>
-              {per_pair_results.length}
+              {resultsList.length}
             </Typography>
           </MetaChip>
           <MetaChip>
@@ -981,15 +983,15 @@ const goToPage = (p) => {
         </>
       )}
 
-      {/* Current Pair */}
-      {currentPair && (
+      {/* Current Image */}
+      {currentItem && (
         <SectionCard elevation={3}>
           <SectionTitle>
-            Pair {page + 1} of {per_pair_results.length}
+            Image {page + 1} of {resultsList.length}
           </SectionTitle>
 
-          <PairSection
-            pair={currentPair}
+          <ImageSection
+            item={currentItem}
             index={page}
             onImageClick={setLightboxImg}
           />

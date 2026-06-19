@@ -251,7 +251,7 @@ export default function LogsPage() {
                 <StyledTableHead>
                   <TableRow>
                     <TableCell>
-                      <strong>Object</strong>
+                      <strong>Object ID</strong>
                     </TableCell>
                     <TableCell>
                       <strong>Scan</strong>
@@ -286,7 +286,7 @@ export default function LogsPage() {
                       {/* Object — name + ID only */}
                       <TableCell sx={{ maxWidth: 160 }}>
                         <Tooltip
-                          title={s.object_name || s.object_id}
+                          title={`Object ID: ${s.object_id}${s.side ? ` · Side: ${s.side}` : ""}`}
                           arrow
                           placement="top"
                         >
@@ -298,31 +298,17 @@ export default function LogsPage() {
                               textOverflow: "ellipsis",
                               whiteSpace: "nowrap",
                               maxWidth: 150,
-                              cursor: "default",
+                              cursor: "pointer",
+                              color: "primary.main",
+                              textDecoration: "underline",
+                              "&:hover": { color: "primary.dark" }
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/logs/object/${s.object_id}`);
                             }}
                           >
-                            {s.object_name || s.object_id}
-                          </Typography>
-                        </Tooltip>
-                        <Tooltip
-                          title={`ID: ${s.object_id}${s.side ? ` · ${s.side}` : ""}`}
-                          arrow
-                          placement="top"
-                        >
-                          <Typography
-                            variant="caption"
-                            color="textSecondary"
-                            sx={{
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                              display: "block",
-                              maxWidth: 150,
-                              cursor: "default",
-                            }}
-                          >
-                            ID: {s.object_id}
-                            {s.side ? ` · ${s.side}` : ""}
+                            {s.object_id}
                           </Typography>
                         </Tooltip>
                       </TableCell>

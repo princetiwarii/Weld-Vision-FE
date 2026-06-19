@@ -77,14 +77,12 @@ export const mockSessionDetails = {
       created_at: "2026-06-01T10:23:00Z",
       completed_at: "2026-06-01T10:23:05Z"
     },
-    per_pair_results: [
+    per_image_results: [
       {
-        frame_index: 0,
+        image_index: 0,
         image_label: "A1",
-        source_frame_a_label: "A1",
-        source_frame_b_label: "A2",
-        stitched_image_url: "https://placehold.co/700x300/1a2035/ffffff?text=Stitched+A1-A2",
-        annotated_image_url: "https://placehold.co/700x300/1a2035/4caf50?text=Annotated+A1-A2",
+        original_image_url: "https://placehold.co/700x300/1a2035/ffffff?text=Original+A1",
+        annotated_image_url: "https://placehold.co/700x300/1a2035/4caf50?text=Annotated+A1",
         overall_result: "pass",
         weld_quality_score: 89,
         defects: [],
@@ -92,12 +90,10 @@ export const mockSessionDetails = {
         model_notes: "Clean bead with full penetration."
       },
       {
-        frame_index: 1,
+        image_index: 1,
         image_label: "A3",
-        source_frame_a_label: "A3",
-        source_frame_b_label: "A4",
-        stitched_image_url: "https://placehold.co/700x300/1a2035/ffffff?text=Stitched+A3-A4",
-        annotated_image_url: "https://placehold.co/700x300/1a2035/4caf50?text=Annotated+A3-A4",
+        original_image_url: "https://placehold.co/700x300/1a2035/ffffff?text=Original+A3",
+        annotated_image_url: "https://placehold.co/700x300/1a2035/4caf50?text=Annotated+A3",
         overall_result: "pass",
         weld_quality_score: 85,
         defects: [],
@@ -106,7 +102,7 @@ export const mockSessionDetails = {
       }
     ],
     statistical_summary: {
-      total_frames_analyzed: 2,
+      total_images_analyzed: 2,
       total_defects_found: 0,
       avg_quality_score: 87,
       min_quality_score: 85,
@@ -140,14 +136,12 @@ export const mockSessionDetails = {
       created_at: "2026-06-02T14:05:00Z",
       completed_at: "2026-06-02T14:05:08Z"
     },
-    per_pair_results: [
+    per_image_results: [
       {
-        frame_index: 0,
+        image_index: 0,
         image_label: "B1",
-        source_frame_a_label: "B1",
-        source_frame_b_label: "B2",
-        stitched_image_url: "https://placehold.co/700x300/1a2035/ffffff?text=Stitched+B1-B2",
-        annotated_image_url: "https://placehold.co/700x300/1a2035/f44336?text=Annotated+B1-B2",
+        original_image_url: "https://placehold.co/700x300/1a2035/ffffff?text=Original+B1",
+        annotated_image_url: "https://placehold.co/700x300/1a2035/f44336?text=Annotated+B1",
         overall_result: "fail",
         weld_quality_score: 48,
         defects: [
@@ -184,12 +178,10 @@ export const mockSessionDetails = {
         model_notes: "Multiple defects detected. Rework recommended."
       },
       {
-        frame_index: 1,
+        image_index: 1,
         image_label: "B3",
-        source_frame_a_label: "B3",
-        source_frame_b_label: "B4",
-        stitched_image_url: "https://placehold.co/700x300/1a2035/ffffff?text=Stitched+B3-B4",
-        annotated_image_url: "https://placehold.co/700x300/1a2035/ff9800?text=Annotated+B3-B4",
+        original_image_url: "https://placehold.co/700x300/1a2035/ffffff?text=Original+B3",
+        annotated_image_url: "https://placehold.co/700x300/1a2035/ff9800?text=Annotated+B3",
         overall_result: "review",
         weld_quality_score: 61,
         defects: [
@@ -213,7 +205,7 @@ export const mockSessionDetails = {
       }
     ],
     statistical_summary: {
-      total_frames_analyzed: 2,
+      total_images_analyzed: 2,
       total_defects_found: 3,
       avg_quality_score: 52,
       min_quality_score: 48,
@@ -247,14 +239,12 @@ export const mockSessionDetails = {
       created_at: "2026-06-03T09:45:00Z",
       completed_at: "2026-06-03T09:45:06Z"
     },
-    per_pair_results: [
+    per_image_results: [
       {
-        frame_index: 0,
+        image_index: 0,
         image_label: "C1",
-        source_frame_a_label: "C1",
-        source_frame_b_label: "C2",
-        stitched_image_url: "https://placehold.co/700x300/1a2035/ffffff?text=Stitched+C1-C2",
-        annotated_image_url: "https://placehold.co/700x300/1a2035/ff9800?text=Annotated+C1-C2",
+        original_image_url: "https://placehold.co/700x300/1a2035/ffffff?text=Original+C1",
+        annotated_image_url: "https://placehold.co/700x300/1a2035/ff9800?text=Annotated+C1",
         overall_result: "review",
         weld_quality_score: 70,
         defects: [
@@ -277,12 +267,10 @@ export const mockSessionDetails = {
         model_notes: "Minor surface irregularity. No critical issues."
       },
       {
-        frame_index: 1,
+        image_index: 1,
         image_label: "C3",
-        source_frame_a_label: "C3",
-        source_frame_b_label: "C4",
-        stitched_image_url: "https://placehold.co/700x300/1a2035/ffffff?text=Stitched+C3-C4",
-        annotated_image_url: "https://placehold.co/700x300/1a2035/4caf50?text=Annotated+C3-C4",
+        original_image_url: "https://placehold.co/700x300/1a2035/ffffff?text=Original+C3",
+        annotated_image_url: "https://placehold.co/700x300/1a2035/4caf50?text=Annotated+C3",
         overall_result: "pass",
         weld_quality_score: 78,
         defects: [],
@@ -291,7 +279,7 @@ export const mockSessionDetails = {
       }
     ],
     statistical_summary: {
-      total_frames_analyzed: 2,
+      total_images_analyzed: 2,
       total_defects_found: 1,
       avg_quality_score: 73,
       min_quality_score: 70,

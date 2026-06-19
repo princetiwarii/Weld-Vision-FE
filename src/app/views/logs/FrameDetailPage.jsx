@@ -132,24 +132,24 @@ export default function FrameDetailPage() {
     <ContentBox><Alert severity="error">{error}</Alert></ContentBox>
   );
 
-  const { session: s, per_pair_results } = sessionData;
+  const resultsList = sessionData.per_image_results || sessionData.per_frame_results || [];
 
-  // Find the current pair by image_label
-  const currentIndex = per_pair_results.findIndex(
+  // Find the current item by image_label
+  const currentIndex = resultsList.findIndex(
     (p) => p.image_label === imageLabel
   );
 
   if (currentIndex === -1) return (
     <ContentBox>
-      <Alert severity="error">Frame "{imageLabel}" not found in this session.</Alert>
+      <Alert severity="error">Image "{imageLabel}" not found in this session.</Alert>
     </ContentBox>
   );
 
-  const pair = per_pair_results[currentIndex];
-  const prevPair = per_pair_results[currentIndex - 1] || null;
-  const nextPair = per_pair_results[currentIndex + 1] || null;
+  const item = resultsList[currentIndex];
+  const prevItem = resultsList[currentIndex - 1] || null;
+  const nextItem = resultsList[currentIndex + 1] || null;
 
-  const geminiDisabled = pair.weld_quality_score === 0 && pair.overall_result === "review";
+  const geminiDisabled = item.weld_quality_score === 0 && item.overall_result === "review";
 
   const navigateToFrame = (label) => {
     navigate(`/logs/${id}/frame/${label}`);
@@ -168,8 +168,7 @@ export default function FrameDetailPage() {
         </Tooltip>
         <Box flexGrow={1}>
           <Typography variant="h6" fontWeight={600}>
-            Frame {pair.source_frame_a_label}
-            {pair.source_frame_b_label ? ` & ${pair.source_frame_b_label}` : ""}
+            Image {item.image_label}
           </Typography>
           <Typography variant="body2" color="textSecondary">
             {s.object_name || s.object_id} — Scan #{s.scan_number} · {formatDate(s.created_at)}
@@ -180,8 +179,8 @@ export default function FrameDetailPage() {
         <Chip
           label={geminiDisabled
             ? "AI Pending"
-            : pair.overall_result.toUpperCase()}
-          color={resultColor(pair.overall_result)}
+            : item.overall_result.toUpperCase()}
+          color={resultColor(item.overall_result)}
           sx={{ fontWeight: 600, alignSelf: "center" }}
         />
       </Box>
@@ -189,79 +188,70 @@ export default function FrameDetailPage() {
       {/* ── Prev / Next navigation ── */}
       <Box display="flex" justifyContent="space-between" mb={2.5}>
         <NavButton
-          disabled={!prevPair}
-          onClick={() => prevPair && navigateToFrame(prevPair.image_label)}
+          disabled={!prevItem}
+          onClick={() => prevItem && navigateToFrame(prevItem.image_label)}
         >
-          ← {prevPair ? `${prevPair.source_frame_a_label}${prevPair.source_frame_b_label ? ` & ${prevPair.source_frame_b_label}` : ""}` : "No previous"}
+          ← {prevItem ? prevItem.image_label : "No previous"}
         </NavButton>
         <Typography variant="caption" color="textSecondary" alignSelf="center">
-          {currentIndex + 1} / {per_pair_results.length}
+          {currentIndex + 1} / {resultsList.length}
         </Typography>
         <NavButton
-          disabled={!nextPair}
-          onClick={() => nextPair && navigateToFrame(nextPair.image_label)}
+          disabled={!nextItem}
+          onClick={() => nextItem && navigateToFrame(nextItem.image_label)}
         >
-          {nextPair ? `${nextPair.source_frame_a_label}${nextPair.source_frame_b_label ? ` & ${nextPair.source_frame_b_label}` : ""}` : "No next"} →
+          {nextItem ? nextItem.image_label : "No next"} →
         </NavButton>
       </Box>
 
       {/* ── AI pending notice ── */}
       {geminiDisabled && (
         <Alert severity="info" sx={{ mb: 2 }}>
-          AI analysis is pending for this frame — scores and defect data will appear once Gemini is enabled.
+          AI analysis is pending for this image — scores and defect data will appear once Gemini is enabled.
         </Alert>
       )}
 
       {/* ── Score summary ── */}
       <SectionCard elevation={3}>
-        <SectionTitle>Frame Summary</SectionTitle>
+        <SectionTitle>Image Summary</SectionTitle>
         <Box display="flex" flexWrap="wrap">
           <MetaChip>
             <Typography variant="caption" color="textSecondary">Quality Score</Typography>
             <Typography variant="body1" fontWeight={700}>
-              {geminiDisabled ? "—" : `${pair.weld_quality_score}/100`}
+              {geminiDisabled ? "—" : `${item.weld_quality_score}/100`}
             </Typography>
           </MetaChip>
           <MetaChip>
             <Typography variant="caption" color="textSecondary">Defects</Typography>
             <Typography variant="body1" fontWeight={700}
-              color={pair.defects?.length > 0 ? "error.main" : "success.main"}>
-              {geminiDisabled ? "—" : (pair.defects?.length || 0)}
+              color={item.defects?.length > 0 ? "error.main" : "success.main"}>
+              {geminiDisabled ? "—" : (item.defects?.length || 0)}
             </Typography>
           </MetaChip>
           <MetaChip>
             <Typography variant="caption" color="textSecondary">Result</Typography>
             <Typography variant="body1" fontWeight={700}
               color={
-                pair.overall_result === "pass" ? "#4caf50"
-                : pair.overall_result === "fail" ? "#f44336"
+                item.overall_result === "pass" ? "#4caf50"
+                : item.overall_result === "fail" ? "#f44336"
                 : "#ff9800"
               }>
-              {geminiDisabled ? "Pending" : pair.overall_result.toUpperCase()}
+              {geminiDisabled ? "Pending" : item.overall_result.toUpperCase()}
             </Typography>
           </MetaChip>
-          {pair.timestamp_a_seconds != null && (
-            <MetaChip>
-              <Typography variant="caption" color="textSecondary">Timestamp</Typography>
-              <Typography variant="body1" fontWeight={700}>
-                {pair.timestamp_a_seconds}s
-                {pair.timestamp_b_seconds != null ? ` – ${pair.timestamp_b_seconds}s` : ""}
-              </Typography>
-            </MetaChip>
-          )}
         </Box>
 
         {/* Score progress bar */}
-        {!geminiDisabled && pair.weld_quality_score > 0 && (
+        {!geminiDisabled && item.weld_quality_score > 0 && (
           <Box mt={1}>
             <LinearProgress
               variant="determinate"
-              value={pair.weld_quality_score}
+              value={item.weld_quality_score}
               sx={{
                 height: 8, borderRadius: 4,
                 backgroundColor: "action.hover",
                 "& .MuiLinearProgress-bar": {
-                  backgroundColor: scoreBarColor(pair.weld_quality_score),
+                  backgroundColor: scoreBarColor(item.weld_quality_score),
                   borderRadius: 4
                 }
               }}
@@ -270,11 +260,11 @@ export default function FrameDetailPage() {
         )}
 
         {/* Standards compliance */}
-        {pair.standards_compliance?.length > 0 && (
+        {item.standards_compliance?.length > 0 && (
           <Box mt={2}>
             <SectionTitle sx={{ mb: 0.5 }}>Standards Compliance</SectionTitle>
             <Box display="flex" flexWrap="wrap" gap={1}>
-              {pair.standards_compliance.map((sc, i) => (
+              {item.standards_compliance.map((sc, i) => (
                 <Chip key={i}
                   label={`${sc.standard}${sc.grade ? ` Grade ${sc.grade}` : ""}: ${sc.compliant ? "✓ Pass" : "✗ Fail"}${sc.notes ? ` — ${sc.notes}` : ""}`}
                   color={sc.compliant ? "success" : "error"}
@@ -286,17 +276,17 @@ export default function FrameDetailPage() {
         )}
       </SectionCard>
 
-      {/* ── Images: stitched + annotated ── */}
+      {/* ── Images: original + annotated ── */}
       <SectionCard elevation={3}>
         <SectionTitle>Images</SectionTitle>
         <Grid container spacing={2}>
           <Grid item xs={12} md={6}>
             <Typography variant="caption" color="textSecondary"
               display="block" mb={0.75} fontWeight={600}>
-              STITCHED FRAMES
+              ORIGINAL IMAGE
             </Typography>
-            {pair.stitched_image_url ? (
-              <AnnotatedImg src={pair.stitched_image_url} alt="Stitched frames" />
+            {item.original_image_url ? (
+              <AnnotatedImg src={item.original_image_url} alt="Original Image" />
             ) : (
               <Box sx={{
                 height: 200, borderRadius: 2, backgroundColor: "action.hover",
@@ -311,8 +301,8 @@ export default function FrameDetailPage() {
               display="block" mb={0.75} fontWeight={600}>
               ANNOTATED IMAGE
             </Typography>
-            {pair.annotated_image_url ? (
-              <AnnotatedImg src={pair.annotated_image_url} alt="Annotated result" />
+            {item.annotated_image_url ? (
+              <AnnotatedImg src={item.annotated_image_url} alt="Annotated result" />
             ) : (
               <Box sx={{
                 height: 200, borderRadius: 2, backgroundColor: "action.hover",
@@ -333,13 +323,13 @@ export default function FrameDetailPage() {
           <Typography variant="body2" color="textSecondary">
             Defect data will appear once AI analysis is enabled.
           </Typography>
-        ) : pair.defects?.length === 0 ? (
+        ) : item.defects?.length === 0 ? (
           <Box display="flex" alignItems="center" gap={1} color="success.main">
             <CheckCircleOutlineIcon fontSize="small" />
-            <Typography variant="body2">No defects detected in this frame pair.</Typography>
+            <Typography variant="body2">No defects detected in this image.</Typography>
           </Box>
         ) : (
-          pair.defects.map((d, i) => (
+          item.defects.map((d, i) => (
             <Accordion key={d.defect_id || i} disableGutters elevation={0}
               sx={{
                 border: "1px solid", borderColor: "divider",
@@ -423,10 +413,10 @@ export default function FrameDetailPage() {
       </SectionCard>
 
       {/* ── Recommendations ── */}
-      {pair.recommendations?.length > 0 && (
+      {item.recommendations?.length > 0 && (
         <SectionCard elevation={3}>
           <SectionTitle>Recommendations</SectionTitle>
-          {pair.recommendations.map((r, i) => (
+          {item.recommendations.map((r, i) => (
             <DefectRow key={i}>
               <BuildOutlinedIcon fontSize="small" color="primary"
                 sx={{ mt: "2px", flexShrink: 0 }} />
@@ -437,11 +427,11 @@ export default function FrameDetailPage() {
       )}
 
       {/* ── AI notes ── */}
-      {pair.model_notes && (
+      {item.model_notes && (
         <SectionCard elevation={3}>
           <SectionTitle>AI Notes</SectionTitle>
           <Typography variant="body2" color="textSecondary" lineHeight={1.8}>
-            {pair.model_notes}
+            {item.model_notes}
           </Typography>
         </SectionCard>
       )}
@@ -449,16 +439,16 @@ export default function FrameDetailPage() {
       {/* ── Bottom prev/next ── */}
       <Box display="flex" justifyContent="space-between" mt={1}>
         <NavButton
-          disabled={!prevPair}
-          onClick={() => prevPair && navigateToFrame(prevPair.image_label)}
+          disabled={!prevItem}
+          onClick={() => prevItem && navigateToFrame(prevItem.image_label)}
         >
-          ← Previous Frame
+          ← Previous Image
         </NavButton>
         <NavButton
-          disabled={!nextPair}
-          onClick={() => nextPair && navigateToFrame(nextPair.image_label)}
+          disabled={!nextItem}
+          onClick={() => nextItem && navigateToFrame(nextItem.image_label)}
         >
-          Next Frame →
+          Next Image →
         </NavButton>
       </Box>
 
